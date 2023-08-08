@@ -71,6 +71,10 @@ page 50101 "ITI Spotify Playlist"
                         PlaylistName := ITICreatePlaylistPage.GetPlaylistName();
                         PlaylistDesc := ITICreatePlaylistPage.GetPlaylistDesc();
                         ArtistFilter := ITICreatePlaylistPage.GetArtistFilter();
+
+                        if not ITIDBManager.ValidatePlaylistFormData(PlaylistName, ArtistFilter) then
+                            exit;
+
                         ITIDBManager.GetArtistWithFilter(ArtistList, ArtistFilter);
                         ITICreatePlaylist.Create(ArtistList, PlaylistName, PlaylistDesc);
                         ITILoadPlaylist.LoadPlaylistsFromAccount();

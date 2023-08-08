@@ -60,6 +60,12 @@ codeunit 50105 "ITI DB Manager"
         RecordRef.GetTable(ITIArtist);
 
         ArtistNoFilter := SelectionFilterManagement.GetSelectionFilter(RecordRef, ITIArtist.FieldNo("No."));
+
+        if not ValidateNumberOfArtists(ITIArtist, ArtistNoFilter) then begin
+            ArtistNoFilter := '';
+            exit;
+        end;
+
         exit(true);
     end;
 
@@ -78,6 +84,38 @@ codeunit 50105 "ITI DB Manager"
                 ArtistList.Add(ITIArtist."Artist Name");
             until ITIArtist.Next() = 0;
     end;
+
+    local procedure ValidateNumberOfArtists(var ITIArtist: Record "ITI Artist"; ArtistFilter: Text): Boolean;
+    begin
+        ITIArtist.SetFilter("No.", ArtistFilter);
+        if ITIArtist.FindSet() then
+            if ITIArtist.Count > 10 then begin
+                Message('The number of choosen artists must be up to 10');
+                exit;
+            end;
+
+        exit(true);
+    end;
+
+    /// <summary>
+    /// Validates the playlist form data to ensure that both the Playlist Name and Artist Filter are not empty.
+    /// </summary>
+    /// <param name="PlaylistName">The name of the playlist.</param>
+    /// <param name="ArtistFilter">The artist filter for the playlist.</param>
+    /// <returns>True if the data is valid; otherwise, false.</returns>
+    procedure ValidatePlaylistFormData(PlaylistName: Text; ArtistFilter: Text): Boolean;
+    begin
+        if PlaylistName = '' then begin
+            Message('Playlist Name can not be empty');
+            exit;
+        end;
+        if ArtistFilter = '' then begin
+            Message('Playlist Filter can not be empty');
+            exit;
+        end;
+        exit(true)
+    end;
+
 
     var
         ITITextConstants: Codeunit "ITI Text Constants";
