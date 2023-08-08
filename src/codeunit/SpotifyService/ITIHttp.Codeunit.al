@@ -1,10 +1,23 @@
+/// <summary>
+/// Codeunit 50102 "ITI Http"
+/// This codeunit provides functions to prepare and send HTTP requests using the provided parameters.
+/// </summary>
 codeunit 50102 "ITI Http"
 {
+    /// <summary>
+    /// Prepares and sends an HTTP request using the provided parameters.
+    /// </summary>
+    /// <param name="HttpRequestMessage">The HTTP request message object.</param>
+    /// <param name="HttpClient">The HTTP client object.</param>
+    /// <param name="HttpResponseMessage">The HTTP response message object.</param>
+    /// <param name="RequestMethod">The HTTP request method (GET, POST, etc.).</param>
+    /// <param name="RequestURI">The URI of the request.</param>
+    /// <param name="RequestContent">The content of the request.</param>
     procedure PrepareAndSendRequest(var HttpRequestMessage: HttpRequestMessage; var HttpClient: HttpClient; var HttpResponseMessage: HttpResponseMessage; RequestMethod: Text; RequestURI: Text; RequestContent: Text)
     var
-        CheckAccessToken: Codeunit "ITI Access Token";
+        ITIAccessToken: Codeunit "ITI Access Token";
     begin
-        CheckAccessToken.Run();
+        ITIAccessToken.Run();
         SetMethod(HttpRequestMessage, RequestMethod);
         SetRequestURI(HttpRequestMessage, RequestURI);
         SetRequestContent(HttpRequestMessage, RequestContent);

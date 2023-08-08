@@ -1,21 +1,20 @@
+/// <summary>
+/// Codeunit 50100 "ITI Create Spotify Playlist"
+/// This codeunit handles the creation of Spotify playlists and adding tracks to them.
+/// </summary>
 codeunit 50100 "ITI Create Spotify Playlist"
 {
     trigger OnRun()
-    var
-        ArtistsIDList: List of [Text];
-        ArtistList: List of [Text];
-        ArtistJsonObjList: List of [JsonObject];
-        TracksIDString: Text;
-        PlaylistID: Text;
-        PlaylistName: Text;
-        PlaylistDesc: Text;
     begin
-        CreatePlaylist(PlaylistID, PlaylistName, PlaylistDesc);
-        IterateArtists(ArtistList, ArtistsIDList, ArtistJsonObjList);
-        GetArtistTopTracksUris(ArtistsIDList, TracksIDString);
-        AddTracksToPlaylist(PlaylistID, TracksIDString);
+
     end;
 
+    /// <summary>
+    /// Creates a new playlist on Spotify and adds tracks from the specified artists to the playlist.
+    /// </summary>
+    /// <param name="ArtistList">A list of artist names.</param>
+    /// <param name="PlaylistName">Name of the new playlist.</param>
+    /// <param name="PlaylistDesc">Description of the new playlist.</param>
     procedure Create(var ArtistList: List of [Text]; PlaylistName: Text; PlaylistDesc: Text)
     var
         ArtistsIDList: List of [Text];
@@ -43,7 +42,7 @@ codeunit 50100 "ITI Create Spotify Playlist"
         PlaylistIDJasonToken: JsonToken;
 
     begin
-        RequestMethod := 'POST';
+        RequestMethod := ITITextConstants.HttpPOST();
         RequestURI := 'https://api.spotify.com/v1/users/31rkjqx2c7vxjbyjhtyefxs4232q/playlists';
 
         CreateJsonString(JsonString, PlaylistName, PlaylistDesc);
@@ -55,7 +54,7 @@ codeunit 50100 "ITI Create Spotify Playlist"
         else begin
             HttpResponseMessage.Content.ReadAs(ResponseJsonString);
             JsonObjResponse.ReadFrom(ResponseJsonString);
-            JsonObjResponse.Get('id', PlaylistIDJasonToken);
+            JsonObjResponse.Get(ITITextConstants.ID(), PlaylistIDJasonToken);
             PlaylistID := PlaylistIDJasonToken.AsValue().AsText();
         end;
     end;
@@ -65,7 +64,7 @@ codeunit 50100 "ITI Create Spotify Playlist"
         RequestMethod: Text;
         ArtistID: Text;
     begin
-        RequestMethod := 'GET';
+        RequestMethod := ITITextConstants.HttpGET();
         foreach ArtistID in ArtistsIDList do
             GetTopTracks(TracksIDString, ArtistID, RequestMethod);
     end;
@@ -89,7 +88,7 @@ codeunit 50100 "ITI Create Spotify Playlist"
         queryname: Text;
         ArtistJsonObj: JsonObject;
     begin
-        RequestMethod := 'GET';
+        RequestMethod := ITITextConstants.HttpGET();
         RequestURI := 'https://api.spotify.com/v1/search?q=' + Artist + '&type=artist&limit=1';
         ITIHttp.PrepareAndSendRequest(HttpRequestMessage, HttpClient, HttpResponseMessage, RequestMethod, RequestURI, RequestContentString);
         HttpResponseMessage.Content.ReadAs(JsonString);
@@ -101,12 +100,18 @@ codeunit 50100 "ITI Create Spotify Playlist"
         JsonObj.SelectToken(queryname, ArtistNameJasonToken);
         ArtistIDText := ArtistIDJasonToken.AsValue().AsText();
         ArtistNameText := ArtistNameJasonToken.AsValue().AsText();
-        ArtistJsonObj.Add('id', ArtistIDText);
-        ArtistJsonObj.Add('name', ArtistNameText);
+        ArtistJsonObj.Add(ITITextConstants.ID(), ArtistIDText);
+        ArtistJsonObj.Add(ITITextConstants.Name(), ArtistNameText);
         ArtistJsonObjList.Add(ArtistJsonObj);
         ArtistsID.Add(ArtistIDText);
     end;
 
+    /// <summary>
+    /// Iterates through the list of artist names, gets their IDs and JSON objects, and stores them in the respective lists.
+    /// </summary>
+    /// <param name="Artists">A list of artist names.</param>
+    /// <param name="ArtistsIDList">An output list to store artist IDs.</param>
+    /// <param name="ArtistJsonObjList">An output list to store artist JSON objects.</param>
     procedure IterateArtists(var Artists: List of [Text]; var ArtistsIDList: List of [Text]; var ArtistJsonObjList: List of [JsonObject])
     var
         Artist: Text;
@@ -149,13 +154,14 @@ codeunit 50100 "ITI Create Spotify Playlist"
         HttpClient: HttpClient;
         RequestMethod: Text;
     begin
-        RequestMethod := 'POST';
+        RequestMethod := ITITextConstants.HttpPOST();
         RequestURI := 'https://api.spotify.com/v1/playlists/' + PlaylistID + '/tracks?uris=' + TracksIDString;
         ITIHttp.PrepareAndSendRequest(HttpRequestMessage, HttpClient, HttpResponseMessage, RequestMethod, RequestURI, RequestContentString);
     end;
 
     local procedure BuildTheStringOfTrackURI(var TracksIDString: Text; var Track: JsonToken)
     var
+
         TrackURIText: Text;
         TrackJsonObj: JsonObject;
         TrackURIJsonTokn: JsonToken;
@@ -170,9 +176,12 @@ codeunit 50100 "ITI Create Spotify Playlist"
     var
         JsonObj: JsonObject;
     begin
-        JsonObj.Add('name', PlaylistName);
-        JsonObj.Add('description', PlaylistDesc);
-        JsonObj.Add('public', true);
+        JsonObj.Add(ITITextConstants.Name(), PlaylistName);
+        JsonObj.Add(ITITextConstants.Desc(), PlaylistDesc);
+        JsonObj.Add(ITITextConstants.Public(), true);
         JsonObj.WriteTo(JsonString);
     end;
+
+    var
+        ITITextConstants: Codeunit "ITI Text Constants";
 }

@@ -1,3 +1,7 @@
+/// <summary>
+/// Codeunit 50101 "ITI Access Token"
+/// This codeunit handles access tokens for Spotify API and provides functions for token retrieval and refresh.
+/// </summary>
 codeunit 50101 "ITI Access Token"
 {
     trigger OnRun()
@@ -5,6 +9,9 @@ codeunit 50101 "ITI Access Token"
         GetToken();
     end;
 
+    /// <summary>
+    /// Checks if the token is valid. Otherwise, refreshes the token.
+    /// </summary>
     procedure GetToken()
     begin
         if IsTokenValid() then
@@ -90,7 +97,7 @@ codeunit 50101 "ITI Access Token"
 
     local procedure SetMethod(var HttpRequestMessage: HttpRequestMessage)
     begin
-        HttpRequestMessage.Method('POST');
+        HttpRequestMessage.Method(ITITextConstants.HttpPOST());
     end;
 
     local procedure SetRequestURI(var HttpRequestMessage: HttpRequestMessage)
@@ -137,4 +144,7 @@ codeunit 50101 "ITI Access Token"
             HttpHeaders.Remove(HeaderName);
         HttpHeaders.Add(HeaderName, HeaderValue);
     end;
+
+    var
+        ITITextConstants: Codeunit "ITI Text Constants";
 }

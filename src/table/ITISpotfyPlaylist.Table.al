@@ -1,6 +1,6 @@
 table 50100 "ITI Spotfy Playlist"
 {
-    DataClassification = ToBeClassified;
+    DataClassification = CustomerContent;
 
     fields
     {

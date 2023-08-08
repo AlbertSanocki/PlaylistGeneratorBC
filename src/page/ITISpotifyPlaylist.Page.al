@@ -1,3 +1,7 @@
+/// <summary>
+/// Page 50101 "ITI Spotify Playlist"
+/// This page displays Spotify playlists and allows users to load existing playlists or create new playlist.
+/// </summary>
 page 50101 "ITI Spotify Playlist"
 {
     PageType = List;
@@ -10,10 +14,7 @@ page 50101 "ITI Spotify Playlist"
     {
         area(Content)
         {
-            usercontrol(Player; PlayerAddin)
-            {
-                ApplicationArea = All;
-            }
+            usercontrol(Player; PlayerAddin) { }
             repeater(GroupName)
             {
                 field("Playlist Name"; Rec."Playlist Name")
@@ -37,7 +38,6 @@ page 50101 "ITI Spotify Playlist"
         {
             action(LoadPlaylists)
             {
-                ApplicationArea = All;
                 Caption = 'LoadPlaylists';
                 ToolTip = 'Load users playlists';
                 Image = Download;
@@ -46,12 +46,11 @@ page 50101 "ITI Spotify Playlist"
                 var
                     ITILoadPlaylist: Codeunit "ITI Load Playlist";
                 begin
-                    ITILoadPlaylist.LoadPlaylistsFromUsersAccount()
+                    ITILoadPlaylist.LoadPlaylistsFromAccount()
                 end;
             }
             action(CreatePlaylist)
             {
-                ApplicationArea = All;
                 Caption = 'Create Playlist';
                 ToolTip = 'Create Playlist';
                 Image = GiroPlus;
@@ -74,7 +73,7 @@ page 50101 "ITI Spotify Playlist"
                         ArtistFilter := ITICreatePlaylistPage.GetArtistFilter();
                         ITIDBManager.GetArtistWithFilter(ArtistList, ArtistFilter);
                         ITICreatePlaylist.Create(ArtistList, PlaylistName, PlaylistDesc);
-                        ITILoadPlaylist.LoadPlaylistsFromUsersAccount();
+                        ITILoadPlaylist.LoadPlaylistsFromAccount();
                         CurrPage.Update();
                     end;
                 end;

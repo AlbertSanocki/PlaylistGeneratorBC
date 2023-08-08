@@ -1,4 +1,8 @@
-page 50100 "ITI Artist List"
+/// <summary>
+/// Page 50100 "ITI Artists"
+/// This page displays a list of artists from the "ITI Artist" table. It allows users to load the 100 most viewed artists from Spotify and create records for them, as well as create a playlist from the top artists.
+/// </summary>
+page 50100 "ITI Artists"
 {
     PageType = List;
     Caption = 'Artist List';
@@ -10,21 +14,16 @@ page 50100 "ITI Artist List"
     {
         area(Content)
         {
-            usercontrol(Player; PlayerAddin)
-            {
-                ApplicationArea = All;
-            }
+            usercontrol(Player; PlayerAddin) { }
             repeater(GroupName)
             {
                 field("Artist Name"; Rec."Artist Name")
                 {
-                    ApplicationArea = All;
                     NotBlank = true;
                     ToolTip = 'Specifies the artist name';
                 }
                 field("Artist ID"; Rec."Artist ID")
                 {
-                    ApplicationArea = All;
                     NotBlank = true;
                     ToolTip = 'Specifies the artist ID';
                 }
@@ -37,7 +36,6 @@ page 50100 "ITI Artist List"
         {
             action(LoadArtists)
             {
-                ApplicationArea = All;
                 Caption = 'LoadArtists';
                 ToolTip = 'Load 100 most viewed artists';
                 Image = Download;
@@ -54,12 +52,11 @@ page 50100 "ITI Artist List"
                     // ArtistRecord.DeleteAll(true);
                     SpotifyService.IterateArtists(ArtistList, ArtistIDList, ArtistJsonObjList);
                     foreach ArtistJsonObj in ArtistJsonObjList do
-                        ITIDBManager.CreateArtistRecord(ArtistJsonObj);
+                        ITIDBManager.CreateArtist(ArtistJsonObj);
                 end;
             }
             action(CreatePlaylistfFromTopArtists)
             {
-                ApplicationArea = All;
                 Caption = 'CreatePlaylistfFromTopArtists';
                 ToolTip = 'CreatePlaylistfFromTopArtists of 100 most viewed artists';
                 Image = CheckList;

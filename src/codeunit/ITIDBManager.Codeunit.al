@@ -1,3 +1,7 @@
+/// <summary>
+/// Codeunit 50105 "ITI DB Manager"
+/// This codeunit manages the database operations for ITI artists and provides functions for creating, filtering, and retrieving artist records.
+/// </summary>
 codeunit 50105 "ITI DB Manager"
 {
     trigger OnRun()
@@ -5,13 +9,17 @@ codeunit 50105 "ITI DB Manager"
 
     end;
 
-    procedure CreateArtistRecord(var ArtistJsonObj: JsonObject)
+    /// <summary>
+    /// Creates an artist record in the "ITI Artist" table based on the provided JsonObject containing artist data.
+    /// </summary>
+    /// <param name="ArtistJsonObj">The JsonObject containing artist data.</param>
+    procedure CreateArtist(var ArtistJsonObj: JsonObject)
     var
         ITIArtistRecord: Record "ITI Artist";
         ArtistIDText: Text[50];
         ArtistNameText: Text[50];
     begin
-        ExtracArtistData(ArtistJsonObj, ArtistIDText, ArtistNameText);
+        ExtractArtistData(ArtistJsonObj, ArtistIDText, ArtistNameText);
         Clear(ITIArtistRecord);
         ITIArtistRecord.Init();
         ITIArtistRecord.Validate("Artist ID", ArtistIDText);
@@ -19,34 +27,47 @@ codeunit 50105 "ITI DB Manager"
         ITIArtistRecord.Insert(true);
     end;
 
-    local procedure ExtracArtistData(var ArtistJsonObj: JsonObject; var ArtistIDText: Text[50]; var ArtistNameText: Text[50])
+    local procedure ExtractArtistData(var ArtistJsonObj: JsonObject; var ArtistIDText: Text[50]; var ArtistNameText: Text[50])
     var
-        ArtistIDJasonToken: JsonToken;
-        ArtistNameJasonToken: JsonToken;
+        ArtistIDJsonToken: JsonToken;
+        ArtistNameJsonToken: JsonToken;
     begin
-        ArtistJsonObj.Get('id', ArtistIDJasonToken);
-        ArtistJsonObj.Get('name', ArtistNameJasonToken);
-        ArtistIDText := ArtistIDJasonToken.AsValue().AsText();
-        ArtistNameText := ArtistNameJasonToken.AsValue().AsText();
+        ArtistJsonObj.Get(ITITextConstants.ID(), ArtistIDJsonToken);
+        ArtistJsonObj.Get(ITITextConstants.Name(), ArtistNameJsonToken);
+        ArtistIDText := CopyStr(ArtistIDJsonToken.AsValue().AsText(), 1, 50);
+        ArtistNameText := CopyStr(ArtistNameJsonToken.AsValue().AsText(), 1, 50);
     end;
 
+    /// <summary>
+    /// Opens a lookup window for selecting an artist filter from the "ITI Artist" table.
+    /// </summary>
+    /// <param name="ITIArtist">The record variable representing the "ITI Artist" table.</param>
+    /// <param name="ArtistNoFilter">Output parameter that will store the selected artist filter.</param>
+    /// <returns>True if a filter is selected, False otherwise.</returns>
     procedure GetArtistFilter(var ITIArtist: Record "ITI Artist"; var ArtistNoFilter: Text): Boolean
     var
         SelectionFilterManagement: Codeunit SelectionFilterManagement;
-        ITIArtistList: Page "ITI Artist List";
+        ITIArtists: Page "ITI Artists";
         RecordRef: RecordRef;
     begin
-        ITIArtistList.SetTableView(ITIArtist);
-        ITIArtistList.LookupMode := true;
-        if ITIArtistList.RunModal() <> Action::LookupOK then
+        ITIArtists.SetTableView(ITIArtist);
+        ITIArtists.LookupMode := true;
+
+        if ITIArtists.RunModal() <> Action::LookupOK then
             exit;
-        ITIArtistList.SetSelectionFilter(ITIArtist);
+
+        ITIArtists.SetSelectionFilter(ITIArtist);
         RecordRef.GetTable(ITIArtist);
 
         ArtistNoFilter := SelectionFilterManagement.GetSelectionFilter(RecordRef, ITIArtist.FieldNo("No."));
         exit(true);
     end;
 
+    /// <summary>
+    /// Retrieves a list of artist names based on the specified artist filter.
+    /// </summary>
+    /// <param name="ArtistList">Output parameter that will store the list of artist names.</param>
+    /// <param name="ArtistFilter">The filter criteria to apply for retrieving artists.</param>
     procedure GetArtistWithFilter(var ArtistList: List of [Text]; ArtistFilter: Text)
     var
         ITIArtist: Record "ITI Artist";
@@ -57,4 +78,7 @@ codeunit 50105 "ITI DB Manager"
                 ArtistList.Add(ITIArtist."Artist Name");
             until ITIArtist.Next() = 0;
     end;
+
+    var
+        ITITextConstants: Codeunit "ITI Text Constants";
 }
