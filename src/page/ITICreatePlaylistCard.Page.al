@@ -8,6 +8,7 @@ page 50104 "ITI Create Playlist Card"
     PageType = StandardDialog;
     Caption = 'Create Playlist';
     ApplicationArea = All;
+
     layout
     {
         area(Content)

@@ -9,6 +9,7 @@ page 50101 "ITI Spotify Playlist"
     ApplicationArea = All;
     UsageCategory = Lists;
     SourceTable = "ITI Spotfy Playlist";
+    Editable = false;
 
     layout
     {
@@ -41,6 +42,11 @@ page 50101 "ITI Spotify Playlist"
                 Caption = 'LoadPlaylists';
                 ToolTip = 'Load users playlists';
                 Image = Download;
+                Promoted = true;
+                PromotedCategory = Process;
+                PromotedIsBig = true;
+                PromotedOnly = true;
+
 
                 trigger OnAction()
                 var
@@ -53,7 +59,12 @@ page 50101 "ITI Spotify Playlist"
             {
                 Caption = 'Create Playlist';
                 ToolTip = 'Create Playlist';
-                Image = GiroPlus;
+                Image = Add;
+                Promoted = true;
+                PromotedCategory = Process;
+                PromotedIsBig = true;
+                PromotedOnly = true;
+
 
                 trigger OnAction()
                 var

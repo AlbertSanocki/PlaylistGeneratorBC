@@ -1,3 +1,6 @@
+/// <summary>
+/// controladdin that allows to play 30 sec sample of the songs
+/// </summary>
 controladdin PlayerAddin
 {
     RequestedHeight = 250;

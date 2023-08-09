@@ -17,14 +17,13 @@ codeunit 50100 "ITI Create Spotify Playlist"
     /// <param name="PlaylistDesc">Description of the new playlist.</param>
     procedure Create(var ArtistList: List of [Text]; PlaylistName: Text; PlaylistDesc: Text)
     var
-        ArtistsIDList: List of [Text];
         ArtistJsonObjList: List of [JsonObject];
         TracksIDString: Text;
         PlaylistID: Text;
     begin
         CreatePlaylist(PlaylistID, PlaylistName, PlaylistDesc);
-        IterateArtists(ArtistList, ArtistsIDList, ArtistJsonObjList);
-        GetArtistTopTracksUris(ArtistsIDList, TracksIDString);
+        IterateArtists(ArtistList, ArtistJsonObjList);
+        GetArtistTopTracksUris(ArtistJsonObjList, TracksIDString);
         AddTracksToPlaylist(PlaylistID, TracksIDString);
     end;
 
@@ -59,17 +58,26 @@ codeunit 50100 "ITI Create Spotify Playlist"
         end;
     end;
 
-    local procedure GetArtistTopTracksUris(var ArtistsIDList: List of [Text]; var TracksIDString: Text)
+    local procedure GetArtistTopTracksUris(var ArtistsIDList: List of [JsonObject]; var TracksIDString: Text)
     var
+        ITIDBManager: Codeunit "ITI DB Manager";
         RequestMethod: Text;
-        ArtistID: Text;
+        ArtistJsonObj: JsonObject;
+        ArtistIDText: Text[50];
+        ArtistNameText: Text[50];
     begin
         RequestMethod := ITITextConstants.HttpGET();
-        foreach ArtistID in ArtistsIDList do
-            GetTopTracks(TracksIDString, ArtistID, RequestMethod);
+        foreach ArtistJsonObj in ArtistsIDList do
+            if ITIDBManager.ExtractArtistData(ArtistJsonObj, ArtistIDText, ArtistNameText) then
+                GetTopTracks(TracksIDString, ArtistIDText, RequestMethod);
     end;
 
-    local procedure GetArtist(var ArtistsID: List of [Text]; var ArtistJsonObjList: List of [JsonObject]; Artist: Text)
+    /// <summary>
+    /// Retrieves artist information from Spotify API and returns it as a JSON object.
+    /// </summary>
+    /// <param name="Artist">The name of the artist to search for.</param>
+    /// <returns>A JsonObject containing artist information.</returns>
+    procedure GetArtist(Artist: Text) ArtistJsonObj: JsonObject;
     var
         ITIHttp: Codeunit "ITI Http";
         HttpRequestMessage: HttpRequestMessage;
@@ -86,7 +94,6 @@ codeunit 50100 "ITI Create Spotify Playlist"
         JsonString: Text;
         queryid: Text;
         queryname: Text;
-        ArtistJsonObj: JsonObject;
     begin
         RequestMethod := ITITextConstants.HttpGET();
         RequestURI := 'https://api.spotify.com/v1/search?q=' + Artist + '&type=artist&limit=1';
@@ -102,22 +109,22 @@ codeunit 50100 "ITI Create Spotify Playlist"
         ArtistNameText := ArtistNameJasonToken.AsValue().AsText();
         ArtistJsonObj.Add(ITITextConstants.ID(), ArtistIDText);
         ArtistJsonObj.Add(ITITextConstants.Name(), ArtistNameText);
-        ArtistJsonObjList.Add(ArtistJsonObj);
-        ArtistsID.Add(ArtistIDText);
     end;
 
     /// <summary>
     /// Iterates through the list of artist names, gets their IDs and JSON objects, and stores them in the respective lists.
     /// </summary>
     /// <param name="Artists">A list of artist names.</param>
-    /// <param name="ArtistsIDList">An output list to store artist IDs.</param>
     /// <param name="ArtistJsonObjList">An output list to store artist JSON objects.</param>
-    procedure IterateArtists(var Artists: List of [Text]; var ArtistsIDList: List of [Text]; var ArtistJsonObjList: List of [JsonObject])
+    procedure IterateArtists(var Artists: List of [Text]; var ArtistJsonObjList: List of [JsonObject])
     var
         Artist: Text;
+        ArtistJsonObj: JsonObject;
     begin
-        foreach Artist in Artists do
-            GetArtist(ArtistsIDList, ArtistJsonObjList, Artist);
+        foreach Artist in Artists do begin
+            ArtistJsonObj := GetArtist(Artist);
+            ArtistJsonObjList.Add(ArtistJsonObj);
+        end;
     end;
 
     local procedure GetTopTracks(var TracksIDString: Text; ArtistID: Text; RequestMethod: Text)

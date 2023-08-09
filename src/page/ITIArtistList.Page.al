@@ -9,6 +9,7 @@ page 50100 "ITI Artists"
     ApplicationArea = All;
     UsageCategory = Lists;
     SourceTable = "ITI Artist";
+    Editable = false;
 
     layout
     {
@@ -22,11 +23,6 @@ page 50100 "ITI Artists"
                     NotBlank = true;
                     ToolTip = 'Specifies the artist name';
                 }
-                field("Artist ID"; Rec."Artist ID")
-                {
-                    NotBlank = true;
-                    ToolTip = 'Specifies the artist ID';
-                }
             }
         }
     }
@@ -39,6 +35,7 @@ page 50100 "ITI Artists"
                 Caption = 'LoadArtists';
                 ToolTip = 'Load 100 most viewed artists';
                 Image = Download;
+                Visible = false;
 
                 trigger OnAction()
                 var
@@ -46,28 +43,44 @@ page 50100 "ITI Artists"
                     SpotifyService: Codeunit "ITI Create Spotify Playlist";
                     ArtistJsonObjList: List of [JsonObject];
                     ArtistList: List of [Text];
-                    ArtistIDList: List of [Text];
                     ArtistJsonObj: JsonObject;
                 begin
                     // ArtistRecord.DeleteAll(true);
-                    SpotifyService.IterateArtists(ArtistList, ArtistIDList, ArtistJsonObjList);
+                    SpotifyService.IterateArtists(ArtistList, ArtistJsonObjList);
                     foreach ArtistJsonObj in ArtistJsonObjList do
                         ITIDBManager.CreateArtist(ArtistJsonObj);
                 end;
             }
-            action(CreatePlaylistfFromTopArtists)
+
+            action(AddArtist)
             {
-                Caption = 'CreatePlaylistfFromTopArtists';
-                ToolTip = 'CreatePlaylistfFromTopArtists of 100 most viewed artists';
-                Image = CheckList;
+                Caption = 'Add Artist';
+                ToolTip = 'Add Artist';
+                Image = Add;
+                Promoted = true;
+                PromotedCategory = Process;
+                PromotedIsBig = true;
+                PromotedOnly = true;
 
                 trigger OnAction()
                 var
-                    ITIArtist: Record "ITI Artist";
                     ITIDBManager: Codeunit "ITI DB Manager";
-                    ArtistNoFilter: Text;
+                    ITICreateSpotifyPlaylist: Codeunit "ITI Create Spotify Playlist";
+                    ITITextConstants: Codeunit "ITI Text Constants";
+                    ITIAddArtistCard: Page "ITI Add Artist Card";
+                    ArtistName: Text;
+                    ArtistJsonObj: JsonObject;
+                    IDResult: JsonToken;
+
                 begin
-                    ITIDBManager.GetArtistFilter(ITIArtist, ArtistNoFilter)
+                    if ITIAddArtistCard.RunModal() = Action::OK then begin
+                        ArtistName := ITIAddArtistCard.GetArtistName();
+                        ArtistJsonObj := ITICreateSpotifyPlaylist.GetArtist(ArtistName);
+                        if not ArtistJsonObj.Get(ITITextConstants.ID(), IDResult) then
+                            Error('There is no Artist with such a name on Spotify');
+                        ITIDBManager.CreateArtist(ArtistJsonObj);
+                        Message('Success! Artist Added.');
+                    end;
                 end;
             }
         }

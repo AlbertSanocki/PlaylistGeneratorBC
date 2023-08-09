@@ -1,3 +1,6 @@
+/// <summary>
+/// Represents a table storing information about ITI artists.
+/// </summary>
 table 50101 "ITI Artist"
 {
     DataClassification = CustomerContent;

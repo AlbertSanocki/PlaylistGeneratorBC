@@ -27,15 +27,24 @@ codeunit 50105 "ITI DB Manager"
         ITIArtistRecord.Insert(true);
     end;
 
-    local procedure ExtractArtistData(var ArtistJsonObj: JsonObject; var ArtistIDText: Text[50]; var ArtistNameText: Text[50])
+    /// <summary>
+    /// Extracts artist data from a JSON object and stores it in variables.
+    /// </summary>
+    /// <param name="ArtistJsonObj">The JsonObject containing artist data.</param>
+    /// <param name="ArtistIDText">Output parameter for artist ID.</param>
+    /// <param name="ArtistNameText">Output parameter for artist name.</param>
+    /// <returns>True if there is some data in json, False otherwise.</returns>
+    procedure ExtractArtistData(var ArtistJsonObj: JsonObject; var ArtistIDText: Text[50]; var ArtistNameText: Text[50]): Boolean
     var
         ArtistIDJsonToken: JsonToken;
         ArtistNameJsonToken: JsonToken;
     begin
-        ArtistJsonObj.Get(ITITextConstants.ID(), ArtistIDJsonToken);
+        if not ArtistJsonObj.Get(ITITextConstants.ID(), ArtistIDJsonToken) then
+            exit(false);
         ArtistJsonObj.Get(ITITextConstants.Name(), ArtistNameJsonToken);
         ArtistIDText := CopyStr(ArtistIDJsonToken.AsValue().AsText(), 1, 50);
         ArtistNameText := CopyStr(ArtistNameJsonToken.AsValue().AsText(), 1, 50);
+        exit(true)
     end;
 
     /// <summary>
@@ -43,7 +52,7 @@ codeunit 50105 "ITI DB Manager"
     /// </summary>
     /// <param name="ITIArtist">The record variable representing the "ITI Artist" table.</param>
     /// <param name="ArtistNoFilter">Output parameter that will store the selected artist filter.</param>
-    /// <returns>True if a filter is selected, False otherwise.</returns>
+
     procedure GetArtistFilter(var ITIArtist: Record "ITI Artist"; var ArtistNoFilter: Text): Boolean
     var
         SelectionFilterManagement: Codeunit SelectionFilterManagement;

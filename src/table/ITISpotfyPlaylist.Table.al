@@ -1,3 +1,6 @@
+/// <summary>
+/// Represents a table storing information about ITI Spotify playlists.
+/// </summary>
 table 50100 "ITI Spotfy Playlist"
 {
     DataClassification = CustomerContent;
@@ -21,8 +24,6 @@ table 50100 "ITI Spotfy Playlist"
         {
             Caption = 'Picture';
         }
-
-
     }
 
     keys
