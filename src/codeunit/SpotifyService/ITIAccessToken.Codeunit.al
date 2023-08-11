@@ -4,11 +4,6 @@
 /// </summary>
 codeunit 50101 "ITI Access Token"
 {
-    trigger OnRun()
-    begin
-        GetToken();
-    end;
-
     /// <summary>
     /// Checks if the token is valid. Otherwise, refreshes the token.
     /// </summary>
@@ -25,10 +20,10 @@ codeunit 50101 "ITI Access Token"
         ExpiresDateTimeValue: Text;
         ExpiresDateTime: DateTime;
     begin
-        if not IsolatedStorage.Contains('access_token') then
+        if not IsolatedStorage.Contains(ITITextConstants.AccessToken()) then
             exit;
 
-        if not IsolatedStorage.Get('expires_in', ExpiresDateTimeValue) then
+        if not IsolatedStorage.Get(ITITextConstants.ExpiresIn(), ExpiresDateTimeValue) then
             exit;
 
         if not Evaluate(ExpiresDateTime, ExpiresDateTimeValue) then
@@ -42,19 +37,22 @@ codeunit 50101 "ITI Access Token"
 
     local procedure RefreshToken()
     var
-        HttpClient: HttpClient;
-        HttpRequestMessage: HttpRequestMessage;
+        ITIHttp: Codeunit "ITI Http";
         HttpResponseMessage: HttpResponseMessage;
         HttpResponseMessageText: Text;
     begin
-        PrepareRequest(HttpRequestMessage);
-
-        HttpClient.Send(HttpRequestMessage, HttpResponseMessage);
-        if not HttpResponseMessage.IsSuccessStatusCode() then
-            Message(HttpResponseMessage.ReasonPhrase())
+        ITIHttp.SetMethod(ITITextConstants.HttpPOST());
+        ITIHttp.SetRequestURI('https://accounts.spotify.com/api/token');
+        ITIHttp.SetRequestContent(ITITextConstants.XWWWFormUrlEncodedGrantTypeData());
+        ITIHttp.SetRequestContentHeaders(ITITextConstants.ContentType(), ITITextConstants.XWWWFormUrlEncoded());
+        ITIHttp.SetAuthorization(ITITextConstants.Authorization(), GetAuthorizationHeaderValue());
+        ITIHttp.Send();
+        if not ITIHttp.GetIsSuccessStatusCode() then
+            Error(HttpResponseMessage.ReasonPhrase())
         else begin
-            HttpResponseMessage.Content.ReadAs(HttpResponseMessageText);
+            ITIHttp.GetResponseMessage().Content.ReadAs(HttpResponseMessageText);
             SetNewToken(HttpResponseMessageText);
+            SetNewTokenExpirationTime(HttpResponseMessageText);
         end;
 
     end;
@@ -62,87 +60,42 @@ codeunit 50101 "ITI Access Token"
     local procedure SetNewToken(ResponseMessageText: Text)
     var
         JsonObj: JsonObject;
-
         AccessTokenJsonKey: Text;
         AccessTokenJson: JsonToken;
         AccessTokenText: Text;
 
+
+    begin
+        AccessTokenJsonKey := ITITextConstants.AccessToken();
+        JsonObj.ReadFrom(ResponseMessageText);
+        JsonObj.Get(AccessTokenJsonKey, AccessTokenJson);
+        AccessTokenText := AccessTokenJson.AsValue().AsText();
+        IsolatedStorage.Set(AccessTokenJsonKey, AccessTokenText);
+    end;
+
+    local procedure SetNewTokenExpirationTime(ResponseMessageText: Text)
+    var
+        JsonObj: JsonObject;
         ExpiresinJsonKey: Text;
         ExpiresInJson: JsonToken;
         ExpiresInInteger: Integer;
     begin
-        AccessTokenJsonKey := 'access_token';
-        ExpiresinJsonKey := 'expires_in';
-
-        JsonObj.ReadFrom(ResponseMessageText);
-        JsonObj.Get(AccessTokenJsonKey, AccessTokenJson);
-        AccessTokenText := AccessTokenJson.AsValue().AsText();
-
+        ExpiresinJsonKey := ITITextConstants.ExpiresIn();
         JsonObj.ReadFrom(ResponseMessageText);
         JsonObj.Get(ExpiresinJsonKey, ExpiresInJson);
         ExpiresInInteger := ExpiresInJson.AsValue().AsInteger();
-
-        IsolatedStorage.Set(AccessTokenJsonKey, AccessTokenText);
         IsolatedStorage.Set(ExpiresinJsonKey, Format(CurrentDateTime() + ExpiresInInteger * 1000));
     end;
 
-    local procedure PrepareRequest(var HttpRequestMessage: HttpRequestMessage)
-    begin
-        SetMethod(HttpRequestMessage);
-        SetRequestURI(HttpRequestMessage);
-        SetRequestContent(HttpRequestMessage);
-        SetRequestContentHeaders(HttpRequestMessage);
-        SetAuthorization(HttpRequestMessage);
-    end;
-
-    local procedure SetMethod(var HttpRequestMessage: HttpRequestMessage)
-    begin
-        HttpRequestMessage.Method(ITITextConstants.HttpPOST());
-    end;
-
-    local procedure SetRequestURI(var HttpRequestMessage: HttpRequestMessage)
-    begin
-        HttpRequestMessage.SetRequestUri('https://accounts.spotify.com/api/token');
-    end;
-
-    local procedure SetRequestContent(var HttpRequestMessage: HttpRequestMessage)
-    var
-        HttpContent: HttpContent;
-    begin
-        HttpContent := HttpRequestMessage.Content();
-        HttpContent.WriteFrom('grant_type=refresh_token&refresh_token=AQAmPlkt6z5d5pnaHWopR7Nj5ZrvUfiML5_CwC3w2W6qpihy1jZk2P-m0mIoDFkKgQOt2a6cjA58vSpJcShlSRppiXGmSle2LybcnZwyfzkzlHf6RcE3dY0NDq3kanrNENU');
-        HttpRequestMessage.Content(HttpContent);
-    end;
-
-    local procedure SetRequestContentHeaders(var HttpRequestMessage: HttpRequestMessage)
-    var
-        HttpHeaders: HttpHeaders;
-        HttpContent: HttpContent;
-    begin
-        HttpContent := HttpRequestMessage.Content();
-        HttpContent.GetHeaders(HttpHeaders);
-        AddHeader(HttpHeaders, 'Content-Type', 'application/x-www-form-urlencoded');
-        HttpRequestMessage.Content(HttpContent);
-    end;
-
-    local procedure SetAuthorization(var HttpRequestMessage: HttpRequestMessage)
+    local procedure GetAuthorizationHeaderValue() AuthorizationHeaderValue: Text
     var
         Base64Convert: Codeunit "Base64 Convert";
-        HttpHeaders: HttpHeaders;
         ClientID: Text[50];
         ClientSecret: Text[50];
     begin
-        ClientID := '92615a6a4f4c4db988154105b51d7d18';
-        ClientSecret := '035d690d55e247dc9e1a2c3dea6a8730';
-        HttpRequestMessage.GetHeaders(HttpHeaders);
-        AddHeader(HttpHeaders, 'Authorization', 'Basic ' + Base64Convert.ToBase64(ClientID + ':' + ClientSecret))
-    end;
-
-    local procedure AddHeader(var HttpHeaders: HttpHeaders; HeaderName: Text; HeaderValue: Text)
-    begin
-        if HttpHeaders.Contains(HeaderName) then
-            HttpHeaders.Remove(HeaderName);
-        HttpHeaders.Add(HeaderName, HeaderValue);
+        ClientID := ITITextConstants.ClientID();
+        ClientSecret := ITITextConstants.ClientSecret();
+        AuthorizationHeaderValue := ITITextConstants.Basic() + Base64Convert.ToBase64(ClientID + ':' + ClientSecret)
     end;
 
     var

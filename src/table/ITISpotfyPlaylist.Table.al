@@ -33,4 +33,31 @@ table 50100 "ITI Spotfy Playlist"
             Clustered = true;
         }
     }
+
+    /// <summary>
+    /// Creates a new playlist on Spotify, filtered by artist, using information from the ITI Create Playlist Card.
+    /// </summary>
+    procedure CreatePlalist()
+    var
+        ITIArtist: Record "ITI Artist";
+        ITICreateSpotifyPlaylist: Codeunit "ITI Create Spotify Playlist";
+        ITILoadPlaylist: Codeunit "ITI Load Playlist";
+        ITICreatePlaylistCard: Page "ITI Create Playlist Card";
+        PlaylistName: Text;
+        PlaylistDesc: Text;
+        ArtistFilter: Text;
+    begin
+        if ITICreatePlaylistCard.RunModal() = Action::OK then begin
+            PlaylistName := ITICreatePlaylistCard.GetPlaylistName();
+            PlaylistDesc := ITICreatePlaylistCard.GetPlaylistDesc();
+            ArtistFilter := ITICreatePlaylistCard.GetArtistFilter();
+
+            if not ITICreateSpotifyPlaylist.ValidatePlaylistFormData(PlaylistName, ArtistFilter) then
+                exit;
+
+            ITIArtist.SetFilter("No.", ArtistFilter);
+            ITICreateSpotifyPlaylist.Create(ITIArtist, PlaylistName, PlaylistDesc);
+            ITILoadPlaylist.LoadPlaylistsFromAccount();
+        end;
+    end;
 }

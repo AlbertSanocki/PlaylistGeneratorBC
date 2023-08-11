@@ -67,9 +67,8 @@ codeunit 50106 "ITI Load Playlist"
 
     local procedure GetUserPlaylistsJsonArray(var JsonArray: JsonArray)
     var
+        ITIAccessToken: Codeunit "ITI Access Token";
         ITIHttp: Codeunit "ITI Http";
-        HttpClient: HttpClient;
-        HttpRequestMessage: HttpRequestMessage;
         HttpResponseMessage: HttpResponseMessage;
         RequestContentString: Text;
         RequestMethod: Text;
@@ -77,11 +76,21 @@ codeunit 50106 "ITI Load Playlist"
         JsonObj: JsonObject;
         JsonString: Text;
         ItemsJsonToken: JsonToken;
+        AccessToken: Text;
     begin
         RequestMethod := ITITextConstants.HttpGET();
         RequestURI := 'https://api.spotify.com/v1/users/31rkjqx2c7vxjbyjhtyefxs4232q/playlists';
-        ITIHttp.PrepareAndSendRequest(HttpRequestMessage, HttpClient, HttpResponseMessage, RequestMethod, RequestURI, RequestContentString);
-        HttpResponseMessage.Content.ReadAs(JsonString);
+        ITIAccessToken.GetToken();
+        IsolatedStorage.Get('access_token', AccessToken);
+        ITIHttp.SetMethod(RequestMethod);
+        ITIHttp.SetRequestURI(RequestURI);
+        ITIHttp.SetRequestContent(RequestContentString);
+        ITIHttp.SetAuthorization(ITITextConstants.Authorization(), ITITextConstants.Bearer() + AccessToken);
+        ITIHttp.Send();
+
+        if not ITIHttp.GetIsSuccessStatusCode() then
+            Error(HttpResponseMessage.ReasonPhrase());
+        ITIHttp.GetResponseMessage().Content.ReadAs(JsonString);
         JsonObj.ReadFrom(JsonString);
         JsonObj.Get('items', ItemsJsonToken);
         JsonArray := ItemsJsonToken.AsArray();

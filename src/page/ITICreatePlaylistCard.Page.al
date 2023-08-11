@@ -31,16 +31,12 @@ page 50104 "ITI Create Playlist Card"
                 trigger OnAssistEdit()
                 var
                     ITIArtist: Record "ITI Artist";
-                    ITIDBManager: Codeunit "ITI DB Manager";
+                    ITICreateSpotifyArtist: Codeunit "ITI Create Spotify Artist";
                 begin
-                    ITIDBManager.GetArtistFilter(ITIArtist, ArtistFilter);
+                    ITICreateSpotifyArtist.GetArtistFilter(ITIArtist, ArtistFilter);
                 end;
             }
         }
-    }
-    actions
-    {
-
     }
 
     /// <summary>

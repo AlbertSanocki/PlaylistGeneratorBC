@@ -28,10 +28,6 @@ page 50101 "ITI Spotify Playlist"
                 }
             }
         }
-        area(Factboxes)
-        {
-
-        }
     }
     actions
     {
@@ -65,32 +61,11 @@ page 50101 "ITI Spotify Playlist"
                 PromotedIsBig = true;
                 PromotedOnly = true;
 
-
                 trigger OnAction()
-                var
-                    ITICreatePlaylist: Codeunit "ITI Create Spotify Playlist";
-                    ITILoadPlaylist: Codeunit "ITI Load Playlist";
-                    ITIDBManager: Codeunit "ITI DB Manager";
-                    ITICreatePlaylistPage: Page "ITI Create Playlist Card";
-                    ArtistList: List of [Text];
-                    PlaylistName: Text;
-                    PlaylistDesc: Text;
-                    ArtistFilter: Text;
 
                 begin
-                    if ITICreatePlaylistPage.RunModal() = Action::OK then begin
-                        PlaylistName := ITICreatePlaylistPage.GetPlaylistName();
-                        PlaylistDesc := ITICreatePlaylistPage.GetPlaylistDesc();
-                        ArtistFilter := ITICreatePlaylistPage.GetArtistFilter();
-
-                        if not ITIDBManager.ValidatePlaylistFormData(PlaylistName, ArtistFilter) then
-                            exit;
-
-                        ITIDBManager.GetArtistWithFilter(ArtistList, ArtistFilter);
-                        ITICreatePlaylist.Create(ArtistList, PlaylistName, PlaylistDesc);
-                        ITILoadPlaylist.LoadPlaylistsFromAccount();
-                        CurrPage.Update();
-                    end;
+                    Rec.CreatePlalist();
+                    CurrPage.Update();
                 end;
             }
         }
